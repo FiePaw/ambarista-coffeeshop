@@ -56,8 +56,13 @@ app.post('/api/track-click', (req, res) => {
   fetchGeolocation(clientIP, clickData, res);
 });
 
-// Utility function untuk mendapatkan geolocation dari IP
-function fetchGeolocation(ip, clickData, res) {
+// Cache untuk geolocation data
+const geolocationCache = new Map();
+
+// Utility function untuk mendapatkan geolocation dari IP dengan retry logic
+function fetchGeolocation(ip, clickData, res, retryCount = 0) {
+  const MAX_RETRIES = 3;
+  
   // Skip geolocation untuk localhost dan private IP
   if (ip === '127.0.0.1' || ip === 'Unknown' || ip === '::1' || 
       ip.startsWith('192.168') || ip.startsWith('10.') || ip.startsWith('172.')) {
@@ -76,46 +81,109 @@ function fetchGeolocation(ip, clickData, res) {
     return;
   }
 
-  console.log(`[GeoIP Lookup] Fetching geolocation for IP: ${ip}`);
+  // Check cache
+  if (geolocationCache.has(ip)) {
+    console.log(`[GeoIP Cache] Using cached data for IP: ${ip}`);
+    clickData.geolocation = geolocationCache.get(ip);
+    sendToDiscord(clickData, res);
+    return;
+  }
+
+  console.log(`[GeoIP Lookup] Fetching geolocation for IP: ${ip} (Attempt ${retryCount + 1}/${MAX_RETRIES})`);
   
-  axios.get(`https://ip-api.com/json/${ip}?fields=country,city,regionName,timezone,isp,org,lat,lon,query,status`)
+  // Gunakan ipinfo.io sebagai primary API dengan fallback ke ip-api.com
+  axios.get(`https://ipinfo.io/${ip}?token=e688f0b4ce7f3f`, {
+    timeout: 5000,
+    headers: {
+      'User-Agent': 'Ambarista-Tracker/1.0'
+    }
+  })
     .then(response => {
       const geoData = response.data;
       
-      // Check API response status
-      if (geoData.status !== 'success') {
-        console.warn(`[GeoIP Warning] API returned status: ${geoData.status} for IP: ${ip}`);
-      }
-      
-      clickData.geolocation = {
+      const geolocation = {
         country: geoData.country || 'Unknown',
         city: geoData.city || 'Unknown',
-        region: geoData.regionName || 'Unknown',
+        region: geoData.region || 'Unknown',
         timezone: geoData.timezone || 'Unknown',
-        isp: geoData.isp || 'Unknown',
+        isp: geoData.org || 'Unknown',
         organization: geoData.org || 'Unknown',
-        latitude: geoData.lat || 0,
-        longitude: geoData.lon || 0,
-        status: geoData.status
+        latitude: geoData.loc ? parseFloat(geoData.loc.split(',')[0]) : 0,
+        longitude: geoData.loc ? parseFloat(geoData.loc.split(',')[1]) : 0,
+        status: 'success'
       };
       
-      console.log(`[GeoIP Success] Country: ${geoData.country}, City: ${geoData.city}, ISP: ${geoData.isp}`);
+      // Cache hasil
+      geolocationCache.set(ip, geolocation);
+      
+      clickData.geolocation = geolocation;
+      
+      console.log(`[GeoIP Success] Country: ${geoData.country}, City: ${geoData.city}, ISP: ${geoData.org}`);
       sendToDiscord(clickData, res);
     })
     .catch(err => {
-      console.error(`[GeoIP Error] Failed to fetch geolocation for IP ${ip}:`, err.message);
-      clickData.geolocation = {
-        country: 'Error',
-        city: 'N/A',
-        region: 'N/A',
-        timezone: 'N/A',
-        isp: 'N/A',
-        organization: 'N/A',
-        latitude: 0,
-        longitude: 0,
-        error: err.message
-      };
-      sendToDiscord(clickData, res);
+      console.warn(`[GeoIP Fallback] ipinfo.io failed (${err.message}), trying ip-api.com...`);
+      
+      // Fallback ke ip-api.com
+      axios.get(`https://ip-api.com/json/${ip}?fields=country,city,regionName,timezone,isp,org,lat,lon,status`, {
+        timeout: 5000
+      })
+        .then(response => {
+          const geoData = response.data;
+          
+          if (geoData.status === 'fail') {
+            throw new Error(`API status: ${geoData.status}`);
+          }
+          
+          const geolocation = {
+            country: geoData.country || 'Unknown',
+            city: geoData.city || 'Unknown',
+            region: geoData.regionName || 'Unknown',
+            timezone: geoData.timezone || 'Unknown',
+            isp: geoData.isp || 'Unknown',
+            organization: geoData.org || 'Unknown',
+            latitude: geoData.lat || 0,
+            longitude: geoData.lon || 0,
+            status: 'success'
+          };
+          
+          // Cache hasil
+          geolocationCache.set(ip, geolocation);
+          
+          clickData.geolocation = geolocation;
+          
+          console.log(`[GeoIP Success (ip-api)] Country: ${geoData.country}, City: ${geoData.city}, ISP: ${geoData.isp}`);
+          sendToDiscord(clickData, res);
+        })
+        .catch(fallbackErr => {
+          // Retry dengan backoff exponential
+          if (retryCount < MAX_RETRIES) {
+            const delayMs = Math.pow(2, retryCount) * 1000;
+            console.log(`[GeoIP Retry] Retrying in ${delayMs}ms...`);
+            setTimeout(() => {
+              fetchGeolocation(ip, clickData, res, retryCount + 1);
+            }, delayMs);
+          } else {
+            console.error(`[GeoIP Error] All retry attempts failed for IP ${ip}:`, fallbackErr.message);
+            
+            // Gunakan default/unknown data
+            const geolocation = {
+              country: 'Unknown',
+              city: 'Unknown',
+              region: 'Unknown',
+              timezone: 'Unknown',
+              isp: 'Unknown',
+              organization: 'Unknown',
+              latitude: 0,
+              longitude: 0,
+              status: 'failed',
+              error: fallbackErr.message
+            };
+            
+            clickData.geolocation = geolocation;
+            sendToDiscord(clickData, res);
+          }
+        });
     });
 }
 
