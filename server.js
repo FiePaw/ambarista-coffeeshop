@@ -39,7 +39,10 @@ app.post('/api/track-click', (req, res) => {
   };
 
   // Path ke dataset.xml
-  const datasetPath = path.join(__dirname, 'dataset.xml');
+  // Di Vercel, gunakan /tmp/ untuk file yang writable
+  const datasetPath = process.env.VERCEL 
+    ? '/tmp/dataset.xml' 
+    : path.join(__dirname, 'dataset.xml');
 
   // Baca file XML yang ada atau buat yang baru
   fs.readFile(datasetPath, 'utf8', (err, data) => {
@@ -109,7 +112,9 @@ function writeXMLFile(xmlContent, filePath, res) {
 
 // Endpoint untuk melihat data tracking (opsional)
 app.get('/api/tracking-data', (req, res) => {
-  const datasetPath = path.join(__dirname, 'dataset.xml');
+  const datasetPath = process.env.VERCEL 
+    ? '/tmp/dataset.xml' 
+    : path.join(__dirname, 'dataset.xml');
   
   fs.readFile(datasetPath, 'utf8', (err, data) => {
     if (err) {
