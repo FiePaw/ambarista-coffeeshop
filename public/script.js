@@ -2,9 +2,43 @@
 const WHATSAPP_NUMBER = '628988329323';
 const WHATSAPP_MESSAGE = 'Halo, saya ingin memesan dari Ambarista Coffee Shop.';
 
-// Function untuk mendapatkan informasi browser
+// Function untuk mendapatkan informasi browser dan device detail
 function getBrowserInfo() {
+  // Parse user agent dengan UAParser
+  const parser = new UAParser();
+  const result = parser.getResult();
+  
+  const deviceInfo = {
+    // Device Information
+    deviceType: result.device.type || 'Desktop',
+    deviceBrand: result.device.vendor || 'Unknown',
+    deviceModel: result.device.model || 'Unknown',
+    
+    // OS Information
+    osName: result.os.name || 'Unknown',
+    osVersion: result.os.version || 'Unknown',
+    
+    // Browser Information
+    browserName: result.browser.name || 'Unknown',
+    browserVersion: result.browser.version || 'Unknown',
+    browserEngine: result.engine.name || 'Unknown',
+    
+    // Device Screen
+    screenResolution: `${window.screen.width}x${window.screen.height}`,
+    devicePixelRatio: window.devicePixelRatio || 1,
+    
+    // System Information
+    language: navigator.language || 'Unknown',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown',
+    platform: navigator.platform || 'Unknown',
+    
+    // Additional Info
+    userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString()
+  };
+  
   return {
+    deviceInfo: deviceInfo,
     userAgent: navigator.userAgent,
     language: navigator.language,
     platform: navigator.platform,
