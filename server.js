@@ -1,9 +1,10 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
-const xml2js = require('xml2js');
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Discord Webhook URL
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1471168535039447123/UjXX0127H7AQXrFVxZGCAww2IITugcxQ2-GeDvtv2Y78haJ0X1rtborGe4u5qvHg4sG6';
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
@@ -38,96 +39,79 @@ app.post('/api/track-click', (req, res) => {
     browserInfo: browserInfo || {}
   };
 
-  // Path ke dataset.xml
-  // Di Vercel, gunakan /tmp/ untuk file yang writable
-  const datasetPath = process.env.VERCEL 
-    ? '/tmp/dataset.xml' 
-    : path.join(__dirname, 'dataset.xml');
-
-  // Baca file XML yang ada atau buat yang baru
-  fs.readFile(datasetPath, 'utf8', (err, data) => {
-    let xmlContent;
-
-    if (err && err.code === 'ENOENT') {
-      // File tidak ada, buat yang baru
-      xmlContent = {
-        clicks: {
-          click: [clickData]
-        }
-      };
-    } else if (err) {
-      console.error('Error reading dataset.xml:', err);
-      return res.status(500).json({ success: false, message: 'Error reading file' });
-    } else {
-      // Parse XML yang ada
-      const parser = new xml2js.Parser();
-      parser.parseString(data, (parseErr, result) => {
-        if (parseErr) {
-          console.error('Error parsing XML:', parseErr);
-          return res.status(500).json({ success: false, message: 'Error parsing XML' });
-        }
-
-        // Tambahkan click baru ke data yang ada
-        if (!result.clicks) {
-          result.clicks = { click: [] };
-        }
-        if (!result.clicks.click) {
-          result.clicks.click = [];
-        }
-
-        // Pastikan click adalah array
-        if (!Array.isArray(result.clicks.click)) {
-          result.clicks.click = [result.clicks.click];
-        }
-
-        result.clicks.click.push(clickData);
-        xmlContent = result;
-
-        // Tulis kembali ke file
-        writeXMLFile(xmlContent, datasetPath, res);
-      });
-      return;
-    }
-
-    // Untuk file baru, langsung tulis
-    writeXMLFile(xmlContent, datasetPath, res);
-  });
+  // Kirim ke Discord Webhook
+  sendToDiscord(clickData, res);
 });
 
-// Utility function untuk menulis XML
-function writeXMLFile(xmlContent, filePath, res) {
-  const builder = new xml2js.Builder({ rootName: 'clicks' });
-  const xml = builder.buildObject(xmlContent.clicks ? xmlContent.clicks : xmlContent);
-
-  fs.writeFile(filePath, xml, (err) => {
-    if (err) {
-      console.error('Error writing dataset.xml:', err);
-      return res.status(500).json({ success: false, message: 'Error writing file' });
+// Utility function untuk mengirim data ke Discord Webhook
+function sendToDiscord(clickData, res) {
+  const embed = {
+    title: '📊 Click Tracking Data',
+    color: 10197915, // Warna oranye
+    fields: [
+      {
+        name: 'Product',
+        value: clickData.product || 'N/A',
+        inline: true
+      },
+      {
+        name: 'Price',
+        value: clickData.price || 'N/A',
+        inline: true
+      },
+      {
+        name: 'IP Address',
+        value: clickData.ip,
+        inline: true
+      },
+      {
+        name: 'User Agent',
+        value: clickData.userAgent.substring(0, 100) || 'N/A',
+        inline: false
+      },
+      {
+        name: 'Browser Info',
+        value: JSON.stringify(clickData.browserInfo).substring(0, 100) || 'N/A',
+        inline: false
+      }
+    ],
+    timestamp: clickData.timestamp,
+    footer: {
+      text: 'Ambarista Coffee Shop Tracker'
     }
+  };
 
-    console.log(`Click recorded - IP: ${xmlContent.clicks?.click?.[0]?.ip || 'Unknown'}`);
-    res.json({ success: true, message: 'Click data recorded' });
-  });
+  const payload = {
+    embeds: [embed],
+    username: 'Ambarista Tracker'
+  };
+
+  fetch(DISCORD_WEBHOOK_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Discord API error: ${response.statusCode}`);
+      }
+      console.log(`Click recorded - IP: ${clickData.ip}, Product: ${clickData.product}`);
+      res.json({ success: true, message: 'Click data sent to Discord' });
+    })
+    .catch(err => {
+      console.error('Error sending to Discord:', err);
+      res.status(500).json({ success: false, message: 'Error sending data to Discord' });
+    });
 }
 
-// Endpoint untuk melihat data tracking (opsional)
+// Endpoint untuk melihat status tracking
 app.get('/api/tracking-data', (req, res) => {
-  const datasetPath = process.env.VERCEL 
-    ? '/tmp/dataset.xml' 
-    : path.join(__dirname, 'dataset.xml');
-  
-  fs.readFile(datasetPath, 'utf8', (err, data) => {
-    if (err) {
-      return res.status(404).json({ error: 'No tracking data yet' });
-    }
-
-    const parser = new xml2js.Parser();
-    parser.parseString(data, (parseErr, result) => {
-      if (parseErr) {
-        return res.status(500).json({ error: 'Error parsing data' });
-      }
-      res.json(result);
-    });
+  res.json({ 
+    message: 'Tracking data is sent to Discord webhook',
+    webhook: 'Configured',
+    status: 'Active'
   });
 });
 
