@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -39,39 +40,140 @@ app.post('/api/track-click', (req, res) => {
     browserInfo: browserInfo || {}
   };
 
-  // Kirim ke Discord Webhook
-  sendToDiscord(clickData, res);
+  // Fetch geolocation dari IP
+  fetchGeolocation(clientIP, clickData, res);
 });
+
+// Utility function untuk mendapatkan geolocation dari IP
+function fetchGeolocation(ip, clickData, res) {
+  // Skip geolocation untuk localhost
+  if (ip === '127.0.0.1' || ip === 'Unknown' || ip.startsWith('192.168') || ip.startsWith('10.')) {
+    clickData.geolocation = {
+      country: 'Local',
+      city: 'Localhost',
+      timezone: 'N/A'
+    };
+    sendToDiscord(clickData, res);
+    return;
+  }
+
+  axios.get(`https://ip-api.com/json/${ip}?fields=country,city,regionName,timezone,isp,org,lat,lon,query`)
+    .then(response => {
+      const geoData = response.data;
+      clickData.geolocation = {
+        country: geoData.country || 'Unknown',
+        city: geoData.city || 'Unknown',
+        region: geoData.regionName || 'Unknown',
+        timezone: geoData.timezone || 'Unknown',
+        isp: geoData.isp || 'Unknown',
+        organization: geoData.org || 'Unknown',
+        latitude: geoData.lat || 0,
+        longitude: geoData.lon || 0,
+        status: geoData.status
+      };
+      sendToDiscord(clickData, res);
+    })
+    .catch(err => {
+      console.error('Error fetching geolocation:', err.message);
+      clickData.geolocation = {
+        error: 'Geolocation fetch failed'
+      };
+      sendToDiscord(clickData, res);
+    });
+}
 
 // Utility function untuk mengirim data ke Discord Webhook
 function sendToDiscord(clickData, res) {
+  // Parse device info dari browser info
+  const deviceInfo = clickData.browserInfo.deviceInfo || {};
+  
   const embed = {
     title: '📊 Click Tracking Data',
     color: 10197915, // Warna oranye
     fields: [
       {
-        name: 'Product',
+        name: '🛍️ Product',
         value: clickData.product || 'N/A',
         inline: true
       },
       {
-        name: 'Price',
+        name: '💰 Price',
         value: clickData.price || 'N/A',
         inline: true
       },
       {
-        name: 'IP Address',
-        value: clickData.ip,
+        name: '🌍 Country',
+        value: clickData.geolocation?.country || 'N/A',
         inline: true
       },
       {
-        name: 'User Agent',
-        value: clickData.userAgent.substring(0, 100) || 'N/A',
+        name: '🏙️ City',
+        value: clickData.geolocation?.city || 'N/A',
+        inline: true
+      },
+      {
+        name: '📍 Region',
+        value: clickData.geolocation?.region || 'N/A',
+        inline: true
+      },
+      {
+        name: '⏰ Timezone',
+        value: clickData.geolocation?.timezone || 'N/A',
+        inline: true
+      },
+      {
+        name: '📱 Device Type',
+        value: deviceInfo.deviceType || 'N/A',
+        inline: true
+      },
+      {
+        name: '🖥️ Device Brand',
+        value: deviceInfo.deviceBrand || 'N/A',
+        inline: true
+      },
+      {
+        name: '📲 Device Model',
+        value: deviceInfo.deviceModel || 'N/A',
+        inline: true
+      },
+      {
+        name: '⚙️ OS',
+        value: `${deviceInfo.osName} ${deviceInfo.osVersion}` || 'N/A',
+        inline: true
+      },
+      {
+        name: '🌐 Browser',
+        value: `${deviceInfo.browserName} ${deviceInfo.browserVersion}` || 'N/A',
+        inline: true
+      },
+      {
+        name: '📺 Screen Resolution',
+        value: deviceInfo.screenResolution || 'N/A',
+        inline: true
+      },
+      {
+        name: '🕵️ ISP',
+        value: (clickData.geolocation?.isp || 'N/A').substring(0, 50),
+        inline: true
+      },
+      {
+        name: '🏢 Organization',
+        value: (clickData.geolocation?.organization || 'N/A').substring(0, 50),
+        inline: true
+      },
+      {
+        name: '🌐 Language',
+        value: deviceInfo.language || 'N/A',
+        inline: true
+      },
+      {
+        name: '🔗 IP Address',
+        value: clickData.ip,
         inline: false
       },
       {
-        name: 'Browser Info',
-        value: JSON.stringify(clickData.browserInfo).substring(0, 100) || 'N/A',
+        name: '📍 Coordinates',
+        value: `[${clickData.geolocation?.latitude || 0}, ${clickData.geolocation?.longitude || 0}]`,
         inline: false
       }
     ],
