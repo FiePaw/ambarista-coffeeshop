@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambarista - Premium Coffee Shop</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-wrapper">
+            <div class="nav-left">
+                <div class="logo">
+                    <img src="assets/logo.jpeg" alt="Ambarista Logo" class="logo-img">
+                    <span class="logo-text">AMBARISTA</span>
+                </div>
+            </div>
+            <ul class="nav-center">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#products">Menu</a></li>
+                <li><a href="javascript:void(0);" onclick="openPromoModal()">Promo</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Kopi nya amba<br>bikin melek loh yah</h1>
+            <p class="hero-description">Amba dimari kalo ada amba mari ngopi</p>
+            <div class="hero-buttons">
+                <button class="btn btn-order" onclick="scrollToSection('products')">Order Dong</button>
+                <button class="btn btn-learn" onclick="scrollToSection('about')">Kepoin kita</button>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="assets/mascot2.jpeg" alt="Coffee" class="coffee-image">
+        </div>
+    </section>
+
+    <!-- Popular Now Section -->
+    <section id="products" class="popular-section">
+        <h2 class="section-title">Menu nya AMBARISTA</h2>
+        <div class="products-carousel">
+            <!-- Product 1 -->
+            <div class="carousel-item">
+                <div class="product-circle">
+                    <img src="assets/coffeelatte.png" alt="Coffee Latte" class="product-img">
+                </div>
+                <div class="product-details">
+                    <h3 class="product-name">Coffee Latte</h3>
+                    <p class="product-variant">With Milk</p>
+                    <div class="product-footer">
+                        <span class="product-price">Rp 8K</span>
+                        <button class="btn-buy" onclick="window.location.href='https://wa.me/628988329323?text=pi%20aku%20mau%20mesen%20kopi%20nyaaa'">→</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product 2 -->
+            <div class="carousel-item">
+                <div class="product-circle">
+                    <img src="assets/matcha.png" alt="Matcha Latte" class="product-img">
+                </div>
+                <div class="product-details">
+                    <h3 class="product-name">Matcha Latte</h3>
+                    <p class="product-variant">Creamy & Green</p>
+                    <div class="product-footer">
+                        <span class="product-price">Rp 7K</span>
+                        <button class="btn-buy" onclick="window.location.href='https://wa.me/628988329323?text=pi%20aku%20mau%20mesen%20matchaaa'">→</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="about-container">
+            <h2 class="section-title">About Ambarista</h2>
+            <p class="about-text">Ambarista adalah coffee shop premium yang menyajikan kopi berkualitas tinggi dengan bahan-bahan pilihan terbaik. Setiap cangkir kopi kami dibuat dengan passion dan dedikasi untuk memberikan pengalaman terbaik bagi Anda.</p>
+            <div class="about-features">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2C10 2 8 3 8 5c0 2 1 4 2 6 0 2-1 4-2 6s0 4 2 4c2 0 3 1 4 1s2-1 4-1c2 0 2-2 2-4-1-2-2-4-2-6 1-2 2-4 2-6 0-2-2-3-4-3z"/>
+                            <circle cx="12" cy="10" r="1" fill="currentColor"/>
+                            <circle cx="9" cy="8" r="0.8" fill="currentColor"/>
+                            <circle cx="15" cy="8" r="0.8" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h3>Premium Beans</h3>
+                    <p>Dari biji pilihan asli dan terbaik</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 11h8V3H3v8zm8 2H3v8h8v-8zm2-2h8V3h-8v8zm8 2h-8v8h8v-8z"/>
+                            <circle cx="7" cy="7" r="1.5" fill="currentColor"/>
+                            <circle cx="17" cy="7" r="1.5" fill="currentColor"/>
+                            <circle cx="7" cy="17" r="1.5" fill="currentColor"/>
+                            <circle cx="17" cy="17" r="1.5" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h3>Perfect Brew</h3>
+                    <p>Dibuat dengan semangat dan keahlian</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </div>
+                    <h3>Healthy & Delicious</h3>
+                    <p>Aman di perut dan ringan di tenggorokan</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contact" class="cta-section">
+        <h2>Mau Order?</h2>
+        <p>Gratis kartu ucapan dari mas AMBA setiap kali order di sini!</p>
+        <button class="btn btn-order-large" onclick="openWhatsApp()">Order via WhatsApp</button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Ambarista Coffee Shop. All rights reserved.</p>
+    </footer>
+
+    <!-- Promo Modal -->
+    <div id="promoModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closePromoModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Promo Spesial</h2>
+            </div>
+            <div class="modal-body">
+                <p>Promo gaada 😭</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closePromoModal()">Yaelah</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

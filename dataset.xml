@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<clicks>
+  <metadata>
+    <description>Ambarista Website Click Tracking Dataset</description>
+    <created>2026-02-11</created>
+    <lastUpdated>2026-02-11</lastUpdated>
+  </metadata>
+  <click>
+    <ip>::1</ip>
+    <product>Page Load</product>
+    <price>0</price>
+    <timestamp>2026-02-11T15:03:04.540Z</timestamp>
+    <userAgent>Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36</userAgent>
+    <browserInfo>
+      <userAgent>Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36</userAgent>
+      <language>en</language>
+      <platform>Win32</platform>
+      <screenResolution>1440x900</screenResolution>
+      <timezone>Asia/Jakarta</timezone>
+      <timestamp>2026-02-11T15:03:04.500Z</timestamp>
+    </browserInfo>
+  </click>
+</clicks>
