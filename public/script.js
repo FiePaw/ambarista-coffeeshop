@@ -1,6 +1,6 @@
 // WhatsApp Configuration
 const WHATSAPP_NUMBER = '628988329323';
-const WHATSAPP_MESSAGE = 'Halo, saya ingin memesan dari Ambarista Coffee Shop.';
+const WHATSAPP_MESSAGE = 'Woi pesen kopi nya dong 5!';
 
 // Function untuk mendapatkan informasi browser dan device detail
 function getBrowserInfo() {
@@ -133,6 +133,13 @@ function openWhatsAppWithMessage(message) {
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
+}
+
+
+function sendPelitMessage() {
+    trackClick('Pelit Message', 0);
+    openWhatsAppWithMessage('pelit lu');
+    closePromoModal();
 }
 
 // Scroll to Section
