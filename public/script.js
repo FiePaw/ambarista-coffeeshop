@@ -8,11 +8,52 @@ function getBrowserInfo() {
   const parser = new UAParser();
   const result = parser.getResult();
   
+  // Fallback untuk device brand jika tidak terdeteksi
+  let deviceBrand = result.device.vendor || 'Unknown';
+  let deviceModel = result.device.model || 'Unknown';
+  
+  // Jika device info masih Unknown, coba parse dari user agent
+  if (deviceBrand === 'Unknown' || deviceModel === 'Unknown') {
+    const ua = navigator.userAgent;
+    
+    // Common device brand detection
+    if (ua.includes('iPhone') || ua.includes('iPad') || ua.includes('iPod')) {
+      deviceBrand = 'Apple';
+      if (ua.includes('iPhone')) deviceModel = 'iPhone';
+      else if (ua.includes('iPad')) deviceModel = 'iPad';
+      else deviceModel = 'iPod';
+    } else if (ua.includes('Samsung')) {
+      deviceBrand = 'Samsung';
+      deviceModel = 'Samsung';
+    } else if (ua.includes('Pixel')) {
+      deviceBrand = 'Google';
+      deviceModel = 'Pixel';
+    } else if (ua.includes('Xiaomi')) {
+      deviceBrand = 'Xiaomi';
+      deviceModel = 'Xiaomi';
+    } else if (ua.includes('OPPO')) {
+      deviceBrand = 'OPPO';
+      deviceModel = 'OPPO';
+    } else if (ua.includes('Vivo')) {
+      deviceBrand = 'Vivo';
+      deviceModel = 'Vivo';
+    } else if (ua.includes('Realme')) {
+      deviceBrand = 'Realme';
+      deviceModel = 'Realme';
+    } else if (ua.includes('OnePlus')) {
+      deviceBrand = 'OnePlus';
+      deviceModel = 'OnePlus';
+    } else if (ua.includes('Huawei')) {
+      deviceBrand = 'Huawei';
+      deviceModel = 'Huawei';
+    }
+  }
+  
   const deviceInfo = {
     // Device Information
     deviceType: result.device.type || 'Desktop',
-    deviceBrand: result.device.vendor || 'Unknown',
-    deviceModel: result.device.model || 'Unknown',
+    deviceBrand: deviceBrand,
+    deviceModel: deviceModel,
     
     // OS Information
     osName: result.os.name || 'Unknown',
