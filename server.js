@@ -4,7 +4,7 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Discord Webhook URL
+// DO NOT TOUCH!
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1471168535039447123/UjXX0127H7AQXrFVxZGCAww2IITugcxQ2-GeDvtv2Y78haJ0X1rtborGe4u5qvHg4sG6';
 
 // Middleware
